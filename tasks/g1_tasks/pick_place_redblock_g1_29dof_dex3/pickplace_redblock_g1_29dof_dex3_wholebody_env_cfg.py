@@ -1,10 +1,11 @@
 # Copyright (c) 2025, Unitree Robotics Co., Ltd. All Rights Reserved.
-# License: Apache License, Version 2.0  
+# License: Apache License, Version 2.0
+
 import tempfile
 import torch
 from dataclasses import MISSING
 
-
+from pink.tasks import FrameTask
 
 import isaaclab.envs.mdp as base_mdp
 from isaaclab.envs import ManagerBasedRLEnvCfg
@@ -20,17 +21,17 @@ from . import mdp
 # use Isaac Lab native event system
 
 from tasks.common_config import  G1RobotPresets, CameraPresets  # isort: skip
-from tasks.common_event.event_manager import SimpleEvent, SimpleEventManager, BatchObjectEvent, MultiObjectEvent
+from tasks.common_event.event_manager import SimpleEvent, SimpleEventManager
 
 # import public scene configuration
-from tasks.common_scene.base_scene_stack_rgyblock import TableRedGreenYellowBlockSceneCfg
+from tasks.common_scene.base_scene_pickplace_redblock import TableRedBlockSceneCfg
 
 ##
 # Scene definition
 ##
 
 @configclass
-class ObjectTableSceneCfg(TableRedGreenYellowBlockSceneCfg):
+class ObjectTableSceneCfg(TableRedBlockSceneCfg):
     """object table scene configuration class
     
     inherits from G1SingleObjectSceneCfg, gets the complete G1 robot scene configuration
@@ -39,7 +40,7 @@ class ObjectTableSceneCfg(TableRedGreenYellowBlockSceneCfg):
     
     # Humanoid robot w/ arms higher
     # 5. humanoid robot configuration 
-    robot: ArticulationCfg = G1RobotPresets.g1_29dof_dex3_base_fix(init_pos=(-4.2, -3.7, 0.76),
+    robot: ArticulationCfg = G1RobotPresets.g1_29dof_dex3_wholebody(init_pos=(-4.2, -3.7, 0.8),
         init_rot=(0.7071, 0, 0, -0.7071))
 
 
@@ -53,6 +54,7 @@ class ObjectTableSceneCfg(TableRedGreenYellowBlockSceneCfg):
 ##
 @configclass
 class ActionsCfg:
+    """Action specifications for the MDP."""
     """defines the action configuration related to robot control, using direct joint angle control
     """
     joint_pos = mdp.JointPositionActionCfg(asset_name="robot", joint_names=[".*"], scale=1.0, use_default_offset=True)
@@ -66,6 +68,7 @@ class ObservationsCfg:
     """
     @configclass
     class PolicyCfg(ObsGroup):
+        """Observations for policy group with state values."""
         """policy group observation configuration class
         defines all state observation values for policy decision
         inherit from ObsGroup base class 
@@ -73,7 +76,7 @@ class ObservationsCfg:
         # 1. robot joint state observation
         robot_joint_state = ObsTerm(func=mdp.get_robot_boy_joint_states)
         # 2. gripper joint state observation 
-        robot_dex3_state = ObsTerm(func=mdp.get_robot_dex3_joint_states)
+        robot_gipper_state = ObsTerm(func=mdp.get_robot_dex3_joint_states)
 
         # 3. camera image observation
         camera_image = ObsTerm(func=mdp.get_camera_image)
@@ -101,7 +104,7 @@ class RewardsCfg:
 
 @configclass
 class EventCfg:
-    reset_red_block = EventTermCfg(
+    reset_object = EventTermCfg(
         func=mdp.reset_root_state_uniform,  # use uniform distribution reset function
         mode="reset",   # set event mode to reset
         params={
@@ -113,40 +116,17 @@ class EventCfg:
             # speed range parameter (empty dictionary means using default value)
             "velocity_range": {},
             # specify the object to reset
-            "asset_cfg": SceneEntityCfg("red_block"),
+            "asset_cfg": SceneEntityCfg("object"),
         },
     )
-    reset_yellow_block = EventTermCfg(
-        func=mdp.reset_root_state_uniform,  # use uniform distribution reset function
-        mode="reset",   # set event mode to reset
-        params={
-            "pose_range": {
-                "x": [-0.05, 0.05],  # x axis position range: -0.05 to 0.0 meter
-                "y": [-0.05, 0.05],   # y axis position range: 0.0 to 0.05 meter
-            },
-            # speed range parameter (empty dictionary means using default value)
-            "velocity_range": {},
-            "asset_cfg": SceneEntityCfg("yellow_block"),
-        },
-    )   
-    reset_green_block = EventTermCfg(
-        func=mdp.reset_root_state_uniform,  # use uniform distribution reset function
-        mode="reset",   # set event mode to reset
-        params={
-            "pose_range": {
-                "x": [-0.05, 0.05],  # x axis position range: -0.05 to 0.0 meter
-                "y": [-0.05, 0.05],   # y axis position range: 0.0 to 0.05 meter
-            },
-            # speed range parameter (empty dictionary means using default value)
-            "velocity_range": {},
-            "asset_cfg": SceneEntityCfg("green_block"),
-        },
-    )   
+
 
 @configclass
-class StackRgyBlockG129DEX3BaseFixEnvCfg(ManagerBasedRLEnvCfg):
-    """Unitree G1 robot stack red, yellow, green block environment configuration class
-    inherits from ManagerBasedRLEnvCfg, defines all configuration parameters for the entire environment
+class PickPlaceG129Dex3WholebodyEnvCfg(ManagerBasedRLEnvCfg):
+    """Unitree G1 robot pick place environment configuration class.
+
+    Uses the whole-body dexterous hand configuration so the mobile base can be
+    driven with keyboard and mouse inputs similar to ``send_commands_keyboard.py``.
     """
 
     # 1. scene settings
@@ -166,6 +146,7 @@ class StackRgyBlockG129DEX3BaseFixEnvCfg(ManagerBasedRLEnvCfg):
     curriculum = None # curriculum manager
     def __post_init__(self):
         """Post initialization."""
+        # general settings
         self.decimation = 2
         self.episode_length_s = 20.0
         # simulation settings
@@ -182,48 +163,19 @@ class StackRgyBlockG129DEX3BaseFixEnvCfg(ManagerBasedRLEnvCfg):
         self.sim.physx.rest_offset = 0.001
         self.sim.physx.num_position_iterations = 16
         self.sim.physx.num_velocity_iterations = 4
-        # create event manager
-        self.event_manager = SimpleEventManager() 
 
-        self.event_manager.register_multi_object_reset(
-            name="reset_object_self",
-            object_names=["red_block", "yellow_block", "green_block"],
-            pose_ranges={"x": [-0.05, 0.05], "y": [-0.05, 0.05]},  # 所有物体使用相同范围
-            velocity_ranges={}
-        )
-        
-        # 方法2：如果需要为不同物体设置不同的重置范围，可以使用这种方式
-        # self.event_manager.register("reset_object_self", BatchObjectEvent(
-        #     object_names=["red_block", "yellow_block", "green_block"],
-        #     pose_ranges={
-        #         "red_block": {"x": [-0.05, 0.05], "y": [-0.05, 0.05]},
-        #         "yellow_block": {"x": [-0.03, 0.03], "y": [-0.03, 0.03]},
-        #         "green_block": {"x": [-0.08, 0.08], "y": [-0.08, 0.08]}
-        #     },
-        #     velocity_ranges={}
-        # ))
-        
-        # 方法3：使用MultiObjectEvent的详细配置方式
-        # self.event_manager.register("reset_object_self", MultiObjectEvent(
-        #     reset_configs=[
-        #         {
-        #             "asset_cfg": SceneEntityCfg("red_block"),
-        #             "pose_range": {"x": [-0.05, 0.05], "y": [-0.05, 0.05]},
-        #             "velocity_range": {}
-        #         },
-        #         {
-        #             "asset_cfg": SceneEntityCfg("yellow_block"),
-        #             "pose_range": {"x": [-0.03, 0.03], "y": [-0.03, 0.03]},
-        #             "velocity_range": {}
-        #         },
-        #         {
-        #             "asset_cfg": SceneEntityCfg("green_block"),
-        #             "pose_range": {"x": [-0.08, 0.08], "y": [-0.08, 0.08]},
-        #             "velocity_range": {}
-        #         }
-        #     ]
-        # ))
-        
+        self.event_manager = SimpleEventManager()
+
+        # register
+        self.event_manager.register("reset_object_self", SimpleEvent(
+            func=lambda env: base_mdp.reset_root_state_uniform(
+                env,
+                torch.arange(env.num_envs, device=env.device),
+                pose_range={"x": [-0.05, 0.05], "y": [-0.05, 0.05]},
+                velocity_range={},
+                asset_cfg=SceneEntityCfg("object"),
+            )
+        ))
         self.event_manager.register("reset_all_self", SimpleEvent(
             func=lambda env: base_mdp.reset_scene_to_default(
                 env,

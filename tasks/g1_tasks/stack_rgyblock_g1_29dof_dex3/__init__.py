@@ -3,14 +3,14 @@
 import gymnasium as gym
 import os
 
-from . import stack_rgyblock_g1_29dof_dex3_joint_env_cfg
+from . import stack_rgyblock_g1_29dof_dex3_wholebody_env_cfg
 
 
 gym.register(
-    id="Isaac-Stack-RgyBlock-G129-Dex3-Joint",
+    id="Isaac-Stack-RgyBlock-G129-Dex3-Wholebody",
     entry_point="isaaclab.envs:ManagerBasedRLEnv",
     kwargs={
-        "env_cfg_entry_point": stack_rgyblock_g1_29dof_dex3_joint_env_cfg.StackRgyBlockG129DEX3BaseFixEnvCfg,
+        "env_cfg_entry_point": stack_rgyblock_g1_29dof_dex3_wholebody_env_cfg.StackRgyBlockG129Dex3WholebodyEnvCfg,
     },
     disable_env_checker=True,
 )

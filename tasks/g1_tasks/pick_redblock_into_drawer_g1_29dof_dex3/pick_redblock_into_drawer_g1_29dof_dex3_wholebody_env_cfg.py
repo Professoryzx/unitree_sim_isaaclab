@@ -1,5 +1,5 @@
 # Copyright (c) 2025, Unitree Robotics Co., Ltd. All Rights Reserved.
-# License: Apache License, Version 2.0  
+# License: Apache License, Version 2.0
 
 import tempfile
 import torch
@@ -40,7 +40,7 @@ class ObjectTableSceneCfg(TablePickRedblockIntoDrawerSceneCfg):
     
     # Humanoid robot w/ arms higher
     # 5. humanoid robot configuration 
-    robot: ArticulationCfg = G1RobotPresets.g1_29dof_dex3_base_fix(init_pos=(-2.5, -3.7, 0.8),
+    robot: ArticulationCfg = G1RobotPresets.g1_29dof_dex3_wholebody(init_pos=(-2.5, -3.7, 0.85),
         init_rot=(0.7071, 0, 0, -0.7071))
 
 
@@ -121,9 +121,11 @@ class EventCfg:
 
 
 @configclass
-class PickRedblockIntoDrawerG129DEX3JointEnvCfg(ManagerBasedRLEnvCfg):
-    """Unitree G1 robot pick place environment configuration class
-    inherits from ManagerBasedRLEnvCfg, defines all configuration parameters for the entire environment
+class PickRedblockIntoDrawerG129Dex3WholebodyEnvCfg(ManagerBasedRLEnvCfg):
+    """Unitree G1 robot pick place environment configuration class.
+
+    Whole-body setup enables keyboard/mouse driving consistent with
+    ``send_commands_8bit.py``.
     """
 
     # 1. scene settings
