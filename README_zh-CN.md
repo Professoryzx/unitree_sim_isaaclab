@@ -48,7 +48,7 @@
     <td align="center">
       <img src="./img/pickplace_clinder_g129_dex3.png" width="300" alt="G1-dex3-cylinder"/>
       <br/>
-      <code>Isaac-PickPlace-Cylinder-G129-Dex3-Joint</code>
+      <code>Isaac-PickPlace-Cylinder-G129-Dex3-Wholebody</code>
     </td>
     <td align="center">
       <img src="./img/Isaac-PickPlace-Cylinder-G129-Inspire-Joint.png" width="300" alt="G1-dex3-cylinder"/>
@@ -70,7 +70,7 @@
     <td align="center">
       <img src="./img/pickplace_redblock_g129_dex3.png" width="300" alt="G1-dex3-redblock"/>
       <br/>
-      <code>Isaac-PickPlace-RedBlock-G129-Dex3-Joint</code>
+      <code>Isaac-PickPlace-RedBlock-G129-Dex3-Wholebody</code>
     </td>
     <td align="center">
       <img src="./img/Isaac-PickPlace-RedBlock-G129-Inspire-Joint.png" width="300" alt="G1-dex3-redblock"/>
@@ -92,7 +92,7 @@
     <td align="center">
       <img src="./img/stack_rgyblock_g129_dex3.png" width="300" alt="G1-dex3-redblock"/>
       <br/>
-      <code>Isaac-Stack-RgyBlock-G129-Dex3-Joint</code>
+      <code>Isaac-Stack-RgyBlock-G129-Dex3-Wholebody</code>
     </td>
     <td align="center">
       <img src="./img/Isaac-Stack-RgyBlock-G129-Inspire-Joint.png" width="300" alt="G1-dex3-redblock"/>

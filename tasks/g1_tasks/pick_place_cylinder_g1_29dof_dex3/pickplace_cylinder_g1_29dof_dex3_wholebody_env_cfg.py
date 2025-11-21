@@ -1,5 +1,5 @@
 # Copyright (c) 2025, Unitree Robotics Co., Ltd. All Rights Reserved.
-# License: Apache License, Version 2.0  
+# License: Apache License, Version 2.0
 
 import tempfile
 import torch
@@ -25,14 +25,14 @@ from tasks.common_config import  G1RobotPresets, CameraPresets  # isort: skip
 from tasks.common_event.event_manager import SimpleEvent, SimpleEventManager
 
 # import public scene configuration
-from tasks.common_scene.base_scene_pickplace_cylindercfg import TableCylinderSceneCfg
+from tasks.common_scene.base_scene_pickplace_cylindercfg_wholebody import TableCylinderSceneCfgWH
 
 ##
 # Scene definition
 ##
 
 @configclass
-class ObjectTableSceneCfg(TableCylinderSceneCfg):
+class ObjectTableSceneCfg(TableCylinderSceneCfgWH):
     """object table scene configuration class
     
     inherits from G1SingleObjectSceneCfg, gets the complete G1 robot scene configuration
@@ -41,7 +41,7 @@ class ObjectTableSceneCfg(TableCylinderSceneCfg):
     
     # Humanoid robot w/ arms higher
     # 5. humanoid robot configuration 
-    robot: ArticulationCfg = G1RobotPresets.g1_29dof_dex3_base_fix()
+    robot: ArticulationCfg = G1RobotPresets.g1_29dof_dex3_wholebody()
     # 6. add camera configuration 
     front_camera = CameraPresets.g1_front_camera()
     left_wrist_camera = CameraPresets.left_dex3_wrist_camera()
@@ -116,9 +116,11 @@ class EventCfg:
 
 
 @configclass
-class PickPlaceG129DEX3JointEnvCfg(ManagerBasedRLEnvCfg):
-    """uNITREE G1 robot pick place environment configuration class
-    inherits from ManagerBasedRLEnvCfg, defines all configuration parameters for the entire environment
+class PickPlaceG129Dex3WholebodyEnvCfg(ManagerBasedRLEnvCfg):
+    """Unitree G1 robot pick place environment configuration class.
+
+    Uses the whole-body dexterous hand configuration to allow mobile control via
+    keyboard/mouse input similar to the examples in ``send_commands_8bit.py``.
     """
 
     # 1. scene settings

@@ -5,14 +5,14 @@
 import gymnasium as gym
 import os
 
-from . import pickplace_cylinder_g1_29dof_dex3_joint_env_cfg
+from . import pickplace_cylinder_g1_29dof_dex3_wholebody_env_cfg
 
 
 gym.register(
-    id="Isaac-PickPlace-Cylinder-G129-Dex3-Joint",
+    id="Isaac-PickPlace-Cylinder-G129-Dex3-Wholebody",
     entry_point="isaaclab.envs:ManagerBasedRLEnv",
     kwargs={
-        "env_cfg_entry_point": pickplace_cylinder_g1_29dof_dex3_joint_env_cfg.PickPlaceG129DEX3JointEnvCfg,
+        "env_cfg_entry_point": pickplace_cylinder_g1_29dof_dex3_wholebody_env_cfg.PickPlaceG129Dex3WholebodyEnvCfg,
     },
     disable_env_checker=True,
 )
